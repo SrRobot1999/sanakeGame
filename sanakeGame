@@ -1,0 +1,94 @@
+import tkinter as tk
+import random
+
+# Tamaño de la ventana y tamaño de cada segmento del Snake
+ANCHO = 800
+ALTO = 600
+TAMANO_SEGMENTO = 20
+
+# Direcciones para mover el Snake
+ARRIBA = 1
+ABAJO = 2
+IZQUIERDA = 3
+DERECHA = 4
+
+# Colores
+COLOR_FONDO = "black"
+COLOR_SNAKE = "white"
+COLOR_COMIDA = "red"
+
+class JuegoSnake:
+    def __init__(self):
+        self.ventana = tk.Tk()
+        self.ventana.title("Snake")
+        self.canvas = tk.Canvas(self.ventana, width=ANCHO, height=ALTO, bg=COLOR_FONDO)
+        self.canvas.pack()
+
+        self.canvas.bind_all("<Key>", self.capturar_tecla)
+
+        self.snake = [(100, 100), (80, 100), (60, 100)]
+        self.direccion = DERECHA
+        self.comida = self.generar_comida()
+
+        self.puntuacion = 0
+        self.etiqueta_puntuacion = tk.Label(self.ventana, text="Puntuación: 0", font=("Helvetica", 16), fg="white", bg=COLOR_FONDO)
+        self.etiqueta_puntuacion.pack()
+
+        self.dibujar()
+        self.ventana.after(100, self.actualizar)
+
+    def dibujar(self):
+        self.canvas.delete("all")
+        for x, y in self.snake:
+            self.canvas.create_rectangle(x, y, x + TAMANO_SEGMENTO, y + TAMANO_SEGMENTO, fill=COLOR_SNAKE)
+        x_comida, y_comida = self.comida
+        self.canvas.create_oval(x_comida, y_comida, x_comida + TAMANO_SEGMENTO, y_comida + TAMANO_SEGMENTO, fill=COLOR_COMIDA)
+
+    def mover(self):
+        x_cabeza, y_cabeza = self.snake[0]
+        if self.direccion == ARRIBA:
+            y_cabeza -= TAMANO_SEGMENTO
+        elif self.direccion == ABAJO:
+            y_cabeza += TAMANO_SEGMENTO
+        elif self.direccion == IZQUIERDA:
+            x_cabeza -= TAMANO_SEGMENTO
+        elif self.direccion == DERECHA:
+            x_cabeza += TAMANO_SEGMENTO
+        self.snake.insert(0, (x_cabeza, y_cabeza))
+        if (x_cabeza, y_cabeza) == self.comida:
+            self.puntuacion += 1
+            self.etiqueta_puntuacion["text"] = "Puntuación: {}".format(self.puntuacion)
+            self.comida = self.generar_comida()
+        else:
+            self.snake.pop()
+    def colision(self):
+        x_cabeza, y_cabeza = self.snake[0]
+        if x_cabeza < 0 or x_cabeza >= ANCHO or y_cabeza < 0 or y_cabeza >= ALTO:
+            return True
+        for x, y in self.snake[1:]:
+            if x == x_cabeza and y == y_cabeza:
+                return True
+        return False
+    def generar_comida(self):
+        x = random.randint(0, (ANCHO - TAMANO_SEGMENTO) // TAMANO_SEGMENTO) * TAMANO_SEGMENTO
+        y = random.randint(0, (ALTO - TAMANO_SEGMENTO) // TAMANO_SEGMENTO) * TAMANO_SEGMENTO
+        return x, y
+    def capturar_tecla(self, event):
+        tecla = event.keysym
+        if tecla == "Up" and self.direccion != ABAJO:
+            self.direccion = ARRIBA
+        elif tecla == "Down" and self.direccion != ARRIBA:
+            self.direccion = ABAJO
+        elif tecla == "Left" and self.direccion != DERECHA:
+            self.direccion = IZQUIERDA
+        elif tecla == "Right" and self.direccion != IZQUIERDA:
+            self.direccion = DERECHA
+    def actualizar(self):
+        if self.colision():
+            self.etiqueta_puntuacion["text"] = "¡Fin del juego! Puntuación final: {}".format(self.puntuacion)
+        else:
+            self.mover()
+            self.dibujar()
+            self.ventana.after(100, self.actualizar)
+juego = JuegoSnake()
+juego.ventana.mainloop()
